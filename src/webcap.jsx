@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import Webcam from "react-webcam";
 import { connect } from 'react-redux';
 import axios from 'axios' 
+import './App.css';
+import logo from './logo.jpeg';
 
 class Webcap extends Component {
 
@@ -14,7 +16,9 @@ class Webcap extends Component {
             class: null,
             probability: null,
             predFlag: true,
-            timeInSec:0
+            timeInSec:0,
+            color:null,
+            showPrediction:false
     
         }
     }
@@ -24,6 +28,10 @@ class Webcap extends Component {
 
     capture = () => {
         let interval = null;
+        this.setState({
+            predFlag:true,
+            showPrediction:true,
+        })
 
         if (this.state.predFlag) {
         interval = setInterval(() => {
@@ -35,6 +43,12 @@ class Webcap extends Component {
                 axios.post('http://127.0.0.1:5000/getPrediction',this.state).
                 then(response => {
                     console.log(response)
+                    let value=response.data.class
+                    this.setState({
+                        class: value,
+                        showPrediction:true,
+                        color: value ==1  ? "green":"red" ,
+                    })
                 })
                 .catch(error =>{
                     console.log(error)})
@@ -48,10 +62,17 @@ class Webcap extends Component {
     stopcapture = () => {
 
         this.setState({
-            predFlag : false
+            predFlag : false,
+            showPrediction:false
         })
         
     };
+    // function Prediction() {
+    //     if (this.state.predFlag) {
+    //       return <button> {this.state.class == 1 ? "Mask Detected":"No Mask Detected" }</button>;
+    //     }
+    //     return <button>Not predicting</button>;
+    //   };
 
 
     render() {
@@ -61,22 +82,56 @@ class Webcap extends Component {
             facingMode: 'user',
         };
         return (
-            <div
-            style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
-                <Webcam 
-                audio = {false}
-                screenshotFormat="image/jpeg"
-                height={800}
-                width={600}
-                ref={this.setRef}
-                videoConstraints={videoConstraints}/>
-                <button onClick={() => this.capture()}>Start Predicting</button>
-                <button onClick={() => this.stopcapture()}>Stop Predicting</button>
-                <img src={this.state.imageData} />
+            <div style={{backgroundColor:'white'}} >
+                <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+               <img className="photo" src={logo} alt="Logo" />
+               </div>
+                <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    <Webcam 
+                    audio = {false}
+                    screenshotFormat="image/jpeg"
+                    width={560}
+                    height={420}
+                    ref={this.setRef}
+                    videoConstraints={videoConstraints}/>
+                </div>
+                <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    <br></br>
+                    <br></br>
+                    
+                    <button  style={{padding: "12px 28px"}} onClick={() => this.capture()}>Start Predicting</button>
+                    <button style={{padding: "12px 28px"}} onClick={() => this.stopcapture()}>Stop Predicting</button>
+                    <br></br>
+                    <br></br>
+                    <br></br>
+                </div>
+                {this.state.showPrediction &&
+                <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    color:this.state.color,
+                    fontSize:"30px"
+                    //  
+                }}>
+                  { this.state.class == 1 ? "Mask Detected":"No Mask Detected" }
+            </div>   }
             </div>
             
         )
